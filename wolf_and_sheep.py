@@ -88,24 +88,97 @@ class Sheep:
             self.x = next_x
             self.y = next_y
 
-pygame.init()
+class Wolf:
+    def __init__(self, x, y, speed=0.7):
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.direction = 'right'
+        self.is_moving = False
 
+    def draw(self, window):
+        pygame.draw.circle(window, (255, 0, 0), (self.x, self.y), 10)
+
+    def walk(self):
+        if self.is_moving:
+            if self.direction == 'up':
+                self.y -= self.speed
+            elif self.direction == 'down':
+                self.y += self.speed
+            elif self.direction == 'left':
+                self.x -= self.speed
+            elif self.direction == 'right':
+                self.x += self.speed
+            elif self.direction == 'up_left':
+                self.x -= self.speed
+                self.y -= self.speed
+            elif self.direction == 'up_right':
+                self.x += self.speed
+                self.y -= self.speed
+            elif self.direction == 'down_left':
+                self.x -= self.speed
+                self.y += self.speed
+            elif self.direction == 'down_right':
+                self.x += self.speed
+                self.y += self.speed
+
+    def catch(self):
+        print("The wolf catches a sheep!")
+
+    def check_limits(self, width, height):
+        if self.x < 0 or self.x > width - 10:
+            self.direction = 'up' if self.direction != 'up' else 'down'
+        if self.y < 0 or self.y > height - 10:
+            self.direction = 'left' if self.direction != 'left' else 'right'
+
+
+pygame.init()
 
 width, height = 800, 600
 window = pygame.display.set_mode((width, height))
 
 sheep_list = [Sheep(random.randint(50, width - 50), random.randint(50, height - 50)) for _ in range(11)]
 
+wolf = Wolf(random.randint(50, width - 50), random.randint(50, height - 50))
+
 running = True
 while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                wolf.direction = 'up'
+                wolf.is_moving = True
+            elif event.key == pygame.K_DOWN:
+                wolf.direction = 'down'
+                wolf.is_moving = True
+            elif event.key == pygame.K_LEFT:
+                wolf.direction = 'left'
+                wolf.is_moving = True
+            elif event.key == pygame.K_RIGHT:
+                wolf.direction = 'right'
+                wolf.is_moving = True
+
     for sheep in sheep_list:
         sheep.walk()
         sheep.check_limits(width, height)
 
+        distance = sheep.distance(wolf)
+        if distance < 150:
+            sheep.scare()
+            sheep.flee(wolf, width, height)
+        else:
+            sheep.calm()
+            sheep.speed = max(sheep.speed - 0.05, sheep.min_speed)
+
+    wolf.walk()
+    wolf.check_limits(width, height)
 
     window.fill((0, 0, 0))
     for sheep in sheep_list:
         sheep.draw(window)
+    wolf.draw(window)
 
     pygame.display.flip()
 
