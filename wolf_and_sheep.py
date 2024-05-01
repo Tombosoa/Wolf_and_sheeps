@@ -133,7 +133,7 @@ class Wolf:
 
 
 pygame.init()
-
+pygame.display.set_caption("Wolf and sheep")
 width, height = 800, 600
 window = pygame.display.set_mode((width, height))
 
