@@ -18,4 +18,4 @@
 ![Gameplay Screenshot](capture.png)
 
 ## Credits
-This game was created by me as a simple project using Pygame.
+This game was created by me as a simple project for fun using Pygame.
