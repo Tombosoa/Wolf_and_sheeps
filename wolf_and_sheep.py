@@ -13,9 +13,10 @@ class Sheep:
         self.max_speed = 1.0
         self.min_speed = 0.1
         self.fleeing = False
+        self.image = pygame.transform.scale(pygame.image.load("sheep.png"), (60, 60))
 
     def draw(self, window):
-        pygame.draw.circle(window, (255, 255, 0), (self.x, self.y), 10)
+        window.blit(self.image, (self.x, self.y))
 
     def walk(self):
         direction = DIRECTIONS[self.direction_index]
@@ -95,9 +96,10 @@ class Wolf:
         self.speed = speed
         self.direction = 'right'
         self.is_moving = False
+        self.image = pygame.transform.scale(pygame.image.load("wolf.png"), (50, 50))
 
     def draw(self, window):
-        pygame.draw.circle(window, (255, 0, 0), (self.x, self.y), 10)
+        window.blit(self.image, (self.x, self.y))
 
     def walk(self):
         if self.is_moving:
@@ -137,6 +139,8 @@ pygame.display.set_caption("Wolf and sheep")
 width, height = 800, 600
 window = pygame.display.set_mode((width, height))
 
+background_image = pygame.transform.scale(pygame.image.load("28256.jpg"), (width, height))
+
 sheep_list = [Sheep(random.randint(50, width - 50), random.randint(50, height - 50)) for _ in range(11)]
 
 wolf = Wolf(random.randint(50, width - 50), random.randint(50, height - 50))
@@ -160,12 +164,16 @@ while running:
                 wolf.direction = 'right'
                 wolf.is_moving = True
 
+
+    window.blit(background_image, (0, 0))
+
+    
     for sheep in sheep_list:
         sheep.walk()
         sheep.check_limits(width, height)
 
         distance = sheep.distance(wolf)
-        if distance < 150:
+        if distance < 100:
             sheep.scare()
             sheep.flee(wolf, width, height)
         else:
@@ -175,7 +183,7 @@ while running:
     wolf.walk()
     wolf.check_limits(width, height)
 
-    window.fill((0, 0, 0))
+    #window.fill((0, 0, 0))
     for sheep in sheep_list:
         sheep.draw(window)
     wolf.draw(window)
