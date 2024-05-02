@@ -115,11 +115,29 @@ class Wolf:
     def walk(self):
         keys = pygame.key.get_pressed() 
         if keys[pygame.K_UP]:
-            self.y -= self.speed
-            self.direction = 'up'
+            if keys[pygame.K_LEFT]:
+                self.x -= self.speed / math.sqrt(2)
+                self.y -= self.speed / math.sqrt(2)
+                self.direction = 'up_left'
+            elif keys[pygame.K_RIGHT]:
+                self.x += self.speed / math.sqrt(2)
+                self.y -= self.speed / math.sqrt(2)
+                self.direction = 'up_right'
+            else:
+                self.y -= self.speed
+                self.direction = 'up'
         elif keys[pygame.K_DOWN]:
-            self.y += self.speed
-            self.direction = 'down'
+            if keys[pygame.K_LEFT]:
+                self.x -= self.speed / math.sqrt(2)
+                self.y += self.speed / math.sqrt(2)
+                self.direction = 'down_left'
+            elif keys[pygame.K_RIGHT]:
+                self.x += self.speed / math.sqrt(2)
+                self.y += self.speed / math.sqrt(2)
+                self.direction = 'down_right'
+            else:
+                self.y += self.speed
+                self.direction = 'down'
         elif keys[pygame.K_LEFT]:
             self.x -= self.speed
             self.direction = 'left'
@@ -127,12 +145,36 @@ class Wolf:
             self.x += self.speed
             self.direction = 'right'
 
-
     def check_limits(self, width, height):
         if self.x < 0 or self.x > width - 10:
             self.x = min(max(self.x, 0), width - 10)
         if self.y < 0 or self.y > height - 10:
             self.y = min(max(self.y, 0), height - 10)
+
+class RedPoint:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.active = True
+        self.duration = 5
+        self.timer = 0
+        self.image = pygame.Surface((10, 10))
+        self.image.fill((255, 0, 0))
+
+    def draw(self, window):
+        if self.active:
+            window.blit(self.image, (self.x, self.y))
+
+    def activate(self):
+        self.active = True
+        self.timer = self.duration
+
+    def update(self):
+        if self.active:
+            self.timer -= 1
+            if self.timer <= 0:
+                self.active = False
+
 
 pygame.init()
 pygame.display.set_caption("Wolf and sheep")
@@ -144,6 +186,13 @@ background_image = pygame.transform.scale(pygame.image.load("28256.jpg"), (width
 sheep_list = [Sheep(random.randint(50, width - 50), random.randint(50, height - 50)) for _ in range(11)]
 
 wolf = Wolf(random.randint(50, width - 50), random.randint(50, height - 50))
+
+red_point1 = RedPoint(random.randint(50, width - 50), random.randint(50, height - 50))
+red_point2 = RedPoint(random.randint(50, width - 50), random.randint(50, height - 50))
+
+
+while abs(red_point1.x - red_point2.x) < 100 and abs(red_point1.y - red_point2.y) < 100:
+    red_point2 = RedPoint(random.randint(50, width - 50), random.randint(50, height - 50))
 
 score = 0
 start_time = time.time()
@@ -184,6 +233,9 @@ while running:
     wolf.check_limits(width, height)
     wolf.draw(window)
 
+    red_point1.draw(window)
+    red_point2.draw(window)
+
     font = pygame.font.Font(None, 36)
     score_text = font.render("Score: " + str(score), True, (255, 255, 255))
     window.blit(score_text, (10, 10))
@@ -198,7 +250,6 @@ while running:
         restart_text = font.render("Click anywhere to restart", True, (255, 255, 255))
         window.blit(restart_text, (width // 2 - 150, height // 2 + 50))
 
-
     pygame.display.flip()
 
     if game_over:
@@ -208,5 +259,24 @@ while running:
                 score = 0
                 start_time = time.time()
                 sheep_list = [Sheep(random.randint(50, width - 50), random.randint(50, height - 50)) for _ in range(11)]
+                red_point1 = RedPoint(random.randint(50, width - 50), random.randint(50, height - 50))
+                red_point2 = RedPoint(random.randint(50, width - 50), random.randint(50, height - 50))
+                while abs(red_point1.x - red_point2.x) < 100 and abs(red_point1.y - red_point2.y) < 100:
+                    red_point2 = RedPoint(random.randint(50, width - 50), random.randint(50, height - 50))
+
+    for sheep in sheep_list:
+        if red_point1.active and sheep.distance(red_point1) < 10:
+            sheep.speed = sheep.max_speed * 3
+            sheep.flee(wolf, width, height)
+            sheep.draw(window)
+            print('active')
+
+        if red_point2.active and sheep.distance(red_point2) < 10:
+            sheep.speed = sheep.max_speed * 3
+            sheep.flee(wolf, width, height)
+            sheep.draw(window)
+
+    red_point1.update()
+    red_point2.update()
 
 pygame.quit()
